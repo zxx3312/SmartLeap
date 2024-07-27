@@ -1,15 +1,12 @@
 import numpy as np
 import cv2
 
-# 示例：假设每一帧的人体关键点数据为 Numpy 数组，形状为 (num_frames, num_keypoints, 2)
-# num_keypoints 是关键点的数量（如肩膀、膝盖、脚踝等），2 表示 (x, y) 坐标
-keypoints_data = np.load('keypoints_data.npy')  # 加载已经提取的关键点数据
 
 import numpy as np
 
 # 假设关键点数据格式如下
 # keypoints_data = (num_frames, num_keypoints, 2)
-keypoints_data = np.load('keypoints_data.npy')
+keypoints_data = np.load('Landmarks/all_landmarks.npy')
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
