@@ -57,6 +57,14 @@ Video: https://www.youtube.com/watch?v=pPTeSd_GXoc
 python main.py -t walk -vs videos/walk.mp4
 ```
 
+## Long-Jump Exercise
+![Long-Jump](https://github.com/Furkan-Gulsen/Sport-With-AI/blob/main/output/output%20pull-up.gif?raw=true)
+
+Video: https://www.youtube.com/watch?v=8hkTMATEuUc
+```
+python main.py -t long-jump -vs videos/long-jump.mp4
+```
+
 ---
 
 If you want to detect your movements live with your webcam, you can run the code line below.
