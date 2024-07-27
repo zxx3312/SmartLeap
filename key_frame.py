@@ -1,3 +1,6 @@
+import os
+
+import cv2
 import numpy as np
 
 # 加载保存的关键点数据
@@ -12,7 +15,12 @@ LEFT_KNEE = 25
 RIGHT_KNEE = 26
 LEFT_ANKLE = 27
 RIGHT_ANKLE = 28
-
+LEFT_HEEL = 29
+RIGHT_HEEL = 30
+LEFT_WRIST = 15
+RIGHT_WRIST = 16
+LEFT_TOE = 31
+RIGHT_TOE = 32
 
 def calculate_angle(a, b, c):
     """计算三个点之间的角度"""
@@ -25,75 +33,137 @@ def calculate_angle(a, b, c):
     angle = np.arccos(cosine_angle)
     return np.degrees(angle)
 
-
 def detect_phases(keypoints):
     num_frames = keypoints.shape[0]
-    phases = [''] * num_frames
 
+    last_pre_swing = -1
+    last_back_swing = -1
+    take_off = -1
+    flight = -1
+    landing = -1
+
+    pmax_hand_height = -1000
+    bmax_hand_height = -1000
+    max_height = -1000
     for i in range(num_frames):
-        left_ankle = keypoints[i][LEFT_ANKLE][:2]
-        right_ankle = keypoints[i][RIGHT_ANKLE][:2]
+        left_heel = keypoints[i][LEFT_HEEL][:2]
+        right_heel = keypoints[i][RIGHT_HEEL][:2]
         left_knee = keypoints[i][LEFT_KNEE][:2]
         right_knee = keypoints[i][RIGHT_KNEE][:2]
+        left_ankle = keypoints[i][LEFT_ANKLE][:2]
+        right_ankle = keypoints[i][RIGHT_ANKLE][:2]
         left_hip = keypoints[i][LEFT_HIP][:2]
         right_hip = keypoints[i][RIGHT_HIP][:2]
         left_shoulder = keypoints[i][LEFT_SHOULDER][:2]
         right_shoulder = keypoints[i][RIGHT_SHOULDER][:2]
+        left_wrist = keypoints[i][LEFT_WRIST][:2]
+        right_wrist = keypoints[i][RIGHT_WRIST][:2]
+        left_toe = keypoints[i][LEFT_TOE][:2]
+        right_toe = keypoints[i][RIGHT_TOE][:2]
 
-        # 计算双肩和双髋的中点
         hip_center = np.mean([left_hip, right_hip], axis=0)
         shoulder_center = np.mean([left_shoulder, right_shoulder], axis=0)
+        heel_height = min(left_heel[1], right_heel[1])
+        hand_height = min(right_wrist[1], left_wrist[1])
+        toe_move = min(left_toe[0], right_toe[0])
+        body_angle = calculate_angle(RIGHT_SHOULDER, RIGHT_HIP, RIGHT_KNEE)
+        left_foot_angle = calculate_angle(left_knee, left_ankle, left_toe)
+        right_foot_angle = calculate_angle(right_knee, right_ankle, right_toe)
 
-        # 计算脚踝高度
-        ankle_height = np.mean([left_ankle[1], right_ankle[1]])
+        print(i)
+        print('heel_height: ', heel_height)
+        print('angle: ', right_foot_angle)
 
-        # 前摆: 肩部高于髋部
-        if shoulder_center[1] < hip_center[1]:
-            phases[i] = '前摆'
-        # 后摆: 肩部低于髋部
-        elif shoulder_center[1] > hip_center[1]:
-            phases[i] = '后摆'
-        # 起飞: 脚踝靠近地面，且髋部与肩部的角度接近180度
-        elif ankle_height < hip_center[1] and 170 <= calculate_angle(left_hip, shoulder_center, right_hip) <= 190:
-            phases[i] = '起飞'
-        # 腾空: 脚踝和膝盖高度相近
-        elif abs(left_ankle[1] - left_knee[1]) < 0.1 and abs(right_ankle[1] - right_knee[1]) < 0.1:
-            phases[i] = '腾空'
-        # 落地: 脚踝高度降低
-        else:
-            phases[i] = '落地'
-
-    return phases
-
-
-def get_keyframe_indices(phases):
-    last_pre_swing = None
-    last_back_swing = None
-    take_off = None
-    flight = None
-    landing = None
-
-    for i, phase in enumerate(phases):
-        if phase == '前摆':
-            last_pre_swing = i
-        elif phase == '后摆':
-            last_back_swing = i
-        elif phase == '起飞' and take_off is None:
+        # 起飞
+        if (left_foot_angle > 150 and right_foot_angle > 150) and take_off == -1 and last_back_swing != -1:
+            print('i: ', i)
             take_off = i
-        elif phase == '腾空' and take_off is not None:
+        # 前摆: 手向前举到峰值
+        elif (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and (hand_height > pmax_hand_height) and take_off == -1:
+            last_pre_swing = i
+        # 后摆: 手向后举到峰值
+        elif (left_wrist[0] < left_shoulder[0] and right_wrist[0] < right_shoulder[0]) and (hand_height > bmax_hand_height) and last_pre_swing != -1 and take_off == -1:
+            last_back_swing = i
+        # 腾空: 脚后跟离地最高点
+        elif heel_height > max_height and take_off != -1:
+            print(max_height)
+            max_height = heel_height
             flight = i
-        elif phase == '落地' and take_off is not None:
+        # 落地: 脚后跟第一次触地
+        elif (left_wrist[1] < left_shoulder[1] and right_wrist[1] < right_shoulder[1]) and flight != -1:
+            print(left_wrist[1], left_shoulder[1], right_wrist[1], right_shoulder[1])
             landing = i
             break
 
+        pmax_hand_height = hand_height
+        bmax_hand_height = hand_height
+
     return last_pre_swing, last_back_swing, take_off, flight, landing
 
+# def get_keyframe_indices(phases):
+#     last_pre_swing = None
+#     last_back_swing = None
+#     take_off = None
+#     flight = None
+#     landing = None
+#
+#     for i, phase in enumerate(phases):
+#         if phase == '前摆':
+#             last_pre_swing = i
+#         elif phase == '后摆':
+#             last_back_swing = i
+#         elif phase == '起飞' and take_off is None:
+#             take_off = i
+#         elif phase == '腾空' and take_off is not None:
+#             flight = i
+#         elif phase == '落地' and take_off is not None:
+#             landing = i
+#             break
+#
+#     return last_pre_swing, last_back_swing, take_off, flight, landing
+
+# 计算地面高度
 
 # 检测动作阶段
-phases = detect_phases(keypoints_data)
+# phases = detect_phases(keypoints_data, ground_level)
+#
+# # 获取关键帧索引
+# keyframe_indices = get_keyframe_indices(phases)
 
-# 获取关键帧索引
-keyframe_indices = get_keyframe_indices(phases)
+keyframe_indices = detect_phases(keypoints_data)
 
 # 输出关键帧索引
 print(f"关键帧索引: {keyframe_indices}")
+
+# 设置视频文件路径
+video_source = "videos/long-jump.mp4"
+output_dir = "Keyframes"
+os.makedirs(output_dir, exist_ok=True)
+
+# 读取视频文件
+cap = cv2.VideoCapture(video_source)
+cap.set(3, 800)  # 设置宽度
+cap.set(4, 480)  # 设置高度
+
+# 提取并保存关键帧
+frame_number = 0
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    if frame_number in keyframe_indices:
+        frame_index = keyframe_indices.index(frame_number)
+        filename = os.path.join(output_dir, f"keyframe_{frame_index}.jpg")
+        cv2.imwrite(filename, frame)
+        print(f"保存关键帧 {filename}")
+        if frame is not None:
+            cv2.imshow(f"Keyframe: {filename}", frame)
+            cv2.waitKey(0)  # 等待键盘输入，以便查看每一帧
+
+    frame_number += 1
+
+cap.release()
+cv2.destroyAllWindows()
+
+print(f"提取并保存了 {len(keyframe_indices)} 个关键帧")

@@ -71,7 +71,7 @@ with mp_pose.Pose(min_detection_confidence=0.5,
                     # 获取关键点坐标
                     x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
 
-                    # 绘制关键点名称
+                    # 绘制关键点中文名称
                     cv2.putText(frame, keypoint_names.get(i, f'P{i}'), (x, y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
