@@ -21,6 +21,19 @@ cap = cv2.VideoCapture(video_source)
 cap.set(3, 800)  # 设置宽度
 cap.set(4, 480)  # 设置高度
 
+# 关键点名称和对应索引
+keypoint_names = {
+    0: 'NOSE', 1: 'LEFT_EYE_INNER', 2: 'LEFT_EYE', 3: 'LEFT_EYE_OUTER',
+    4: 'RIGHT_EYE_INNER', 5: 'RIGHT_EYE', 6: 'RIGHT_EYE_OUTER',
+    7: 'LEFT_EAR', 8: 'RIGHT_EAR', 9: 'MOUTH_LEFT', 10: 'MOUTH_RIGHT',
+    11: 'LEFT_SHOULDER', 12: 'RIGHT_SHOULDER', 13: 'LEFT_ELBOW', 14: 'RIGHT_ELBOW',
+    15: 'LEFT_WRIST', 16: 'RIGHT_WRIST', 17: 'LEFT_PINKY', 18: 'RIGHT_PINKY',
+    19: 'LEFT_INDEX', 20: 'RIGHT_INDEX', 21: 'LEFT_THUMB', 22: 'RIGHT_THUMB',
+    23: 'LEFT_HIP', 24: 'RIGHT_HIP', 25: 'LEFT_KNEE', 26: 'RIGHT_KNEE',
+    27: 'LEFT_ANKLE', 28: 'RIGHT_ANKLE', 29: 'LEFT_HEEL', 30: 'RIGHT_HEEL',
+    31: 'LEFT_FOOT_INDEX', 32: 'RIGHT_FOOT_INDEX'
+}
+
 # 存储所有帧的关键点数据
 all_landmarks = []
 
@@ -53,14 +66,23 @@ with mp_pose.Pose(min_detection_confidence=0.5,
             except:
                 pass
 
-            # 渲染关键点
-            mp_drawing.draw_landmarks(
-                frame,
-                results.pose_landmarks,
-                mp_pose.POSE_CONNECTIONS,
-                mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2, circle_radius=2),
-                mp_drawing.DrawingSpec(color=(174, 139, 45), thickness=2, circle_radius=2),
-            )
+            if results.pose_landmarks:
+                for i, landmark in enumerate(results.pose_landmarks.landmark):
+                    # 获取关键点坐标
+                    x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
+
+                    # 绘制关键点名称
+                    cv2.putText(frame, keypoint_names.get(i, f'P{i}'), (x, y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+
+                # 渲染关键点
+                mp_drawing.draw_landmarks(
+                    frame,
+                    results.pose_landmarks,
+                    mp_pose.POSE_CONNECTIONS,
+                    mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2, circle_radius=2),
+                    mp_drawing.DrawingSpec(color=(174, 139, 45), thickness=2, circle_radius=2),
+                )
 
             cv2.imshow('Video', frame)
             if cv2.waitKey(10) & 0xFF == ord('q'):

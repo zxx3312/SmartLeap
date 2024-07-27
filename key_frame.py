@@ -1,11 +1,6 @@
 import numpy as np
-import cv2
 
-
-import numpy as np
-
-# 假设关键点数据格式如下
-# keypoints_data = (num_frames, num_keypoints, 2)
+# 加载保存的关键点数据
 keypoints_data = np.load('Landmarks/all_landmarks.npy')
 
 # 定义关键点的索引
@@ -18,57 +13,87 @@ RIGHT_KNEE = 26
 LEFT_ANKLE = 27
 RIGHT_ANKLE = 28
 
-def detect_phase(keypoints):
-    phases = []
-    for frame in keypoints:
-        left_knee_y = frame[LEFT_KNEE][1]
-        right_knee_y = frame[RIGHT_KNEE][1]
-        left_ankle_y = frame[LEFT_ANKLE][1]
-        right_ankle_y = frame[RIGHT_ANKLE][1]
-        left_shoulder_y = frame[LEFT_SHOULDER][1]
-        right_shoulder_y = frame[RIGHT_SHOULDER][1]
-        left_hip_y = frame[LEFT_HIP][1]
-        right_hip_y = frame[RIGHT_HIP][1]
 
-        # 使用膝盖和脚踝的y坐标检测动作阶段
-        if (left_ankle_y - left_knee_y < -20) or (right_ankle_y - right_knee_y < -20):
-            phases.append('起飞')
-        elif (left_ankle_y - left_knee_y > 20) or (right_ankle_y - right_knee_y > 20):
-            phases.append('落地')
-        elif abs(left_ankle_y - left_knee_y) < 10 and abs(right_ankle_y - right_knee_y) < 10:
-            phases.append('腾空')
-        elif (left_shoulder_y - left_hip_y > 20) or (right_shoulder_y - right_hip_y > 20):
-            phases.append('前摆')
+def calculate_angle(a, b, c):
+    """计算三个点之间的角度"""
+    a = np.array(a)
+    b = np.array(b)
+    c = np.array(c)
+    ba = a - b
+    bc = c - b
+    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+    angle = np.arccos(cosine_angle)
+    return np.degrees(angle)
+
+
+def detect_phases(keypoints):
+    num_frames = keypoints.shape[0]
+    phases = [''] * num_frames
+
+    for i in range(num_frames):
+        left_ankle = keypoints[i][LEFT_ANKLE][:2]
+        right_ankle = keypoints[i][RIGHT_ANKLE][:2]
+        left_knee = keypoints[i][LEFT_KNEE][:2]
+        right_knee = keypoints[i][RIGHT_KNEE][:2]
+        left_hip = keypoints[i][LEFT_HIP][:2]
+        right_hip = keypoints[i][RIGHT_HIP][:2]
+        left_shoulder = keypoints[i][LEFT_SHOULDER][:2]
+        right_shoulder = keypoints[i][RIGHT_SHOULDER][:2]
+
+        # 计算双肩和双髋的中点
+        hip_center = np.mean([left_hip, right_hip], axis=0)
+        shoulder_center = np.mean([left_shoulder, right_shoulder], axis=0)
+
+        # 计算脚踝高度
+        ankle_height = np.mean([left_ankle[1], right_ankle[1]])
+
+        # 前摆: 肩部高于髋部
+        if shoulder_center[1] < hip_center[1]:
+            phases[i] = '前摆'
+        # 后摆: 肩部低于髋部
+        elif shoulder_center[1] > hip_center[1]:
+            phases[i] = '后摆'
+        # 起飞: 脚踝靠近地面，且髋部与肩部的角度接近180度
+        elif ankle_height < hip_center[1] and 170 <= calculate_angle(left_hip, shoulder_center, right_hip) <= 190:
+            phases[i] = '起飞'
+        # 腾空: 脚踝和膝盖高度相近
+        elif abs(left_ankle[1] - left_knee[1]) < 0.1 and abs(right_ankle[1] - right_knee[1]) < 0.1:
+            phases[i] = '腾空'
+        # 落地: 脚踝高度降低
         else:
-            phases.append('后摆')
+            phases[i] = '落地'
 
     return phases
 
-def get_keyframes(phases):
-    keyframes_indices = []
+
+def get_keyframe_indices(phases):
+    last_pre_swing = None
+    last_back_swing = None
+    take_off = None
+    flight = None
+    landing = None
+
     for i, phase in enumerate(phases):
-        if phase in ['前摆', '后摆', '起飞', '腾空', '落地']:
-            keyframes_indices.append(i)
-    return keyframes_indices
+        if phase == '前摆':
+            last_pre_swing = i
+        elif phase == '后摆':
+            last_back_swing = i
+        elif phase == '起飞' and take_off is None:
+            take_off = i
+        elif phase == '腾空' and take_off is not None:
+            flight = i
+        elif phase == '落地' and take_off is not None:
+            landing = i
+            break
+
+    return last_pre_swing, last_back_swing, take_off, flight, landing
+
 
 # 检测动作阶段
-phases = detect_phase(keypoints_data)
+phases = detect_phases(keypoints_data)
 
 # 获取关键帧索引
-keyframes_indices = get_keyframes(phases)
+keyframe_indices = get_keyframe_indices(phases)
 
 # 输出关键帧索引
-print(f"关键帧索引: {keyframes_indices}")
-
-# 如果需要保存关键帧图像，请加载原始视频并提取对应帧
-# 示例：
-video_path = 'video_with_keypoints.mp4'
-cap = cv2.VideoCapture(video_path)
-for idx in keyframes_indices:
-    cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-    ret, frame = cap.read()
-    if ret:
-        output_path = f"keyframe_{idx}.jpg"
-        cv2.imwrite(output_path, frame)
-cap.release()
-cv2.destroyAllWindows()
+print(f"关键帧索引: {keyframe_indices}")
