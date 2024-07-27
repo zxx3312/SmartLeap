@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ce12bf0c-7df2-43dc-8cad-0b35b3bd0fa3" name="更改" comment="Update README.md" />
+    <list default="true" id="ce12bf0c-7df2-43dc-8cad-0b35b3bd0fa3" name="更改" comment="Update README.md">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Sport-With-AI-main/Sport-With-AI-main/main_cao.py" beforeDir="false" afterPath="$PROJECT_DIR$/Sport-With-AI-main/Sport-With-AI-main/main_cao.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -128,7 +131,15 @@
       <option name="project" value="LOCAL" />
       <updated>1721903020310</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Update README.md">
+      <option name="closed" value="true" />
+      <created>1721903420964</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1721903420964</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

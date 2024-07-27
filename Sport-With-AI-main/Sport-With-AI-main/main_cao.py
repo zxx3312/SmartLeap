@@ -5,9 +5,13 @@ from utils import *
 import mediapipe as mp
 from body_part_angle import BodyPartAngle
 from types_of_exercise import TypeOfExercise
+import os
 
 ## 设置视频地址
-video_source = r"D:\Users\86195\Desktop\a07122e946098763db7ff9808a8c5b10.mp4"
+## 请确保视频文件放在“videos”文件夹里！！！
+current_dir = os.getcwd()
+relative_path = "vieos/your_video_path"
+video_source = os.path.join(current_dir, relative_path)
 
 ## 设置动作类型（输出文件的名称）
 exercise_type = "cjd_test1"
