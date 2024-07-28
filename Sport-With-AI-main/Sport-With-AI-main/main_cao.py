@@ -66,6 +66,7 @@ with mp_pose.Pose(min_detection_confidence=0.5,
             except:
                 pass
 
+
             if results.pose_landmarks:
                 for i, landmark in enumerate(results.pose_landmarks.landmark):
                     # 获取关键点坐标
