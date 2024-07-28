@@ -1,3 +1,5 @@
+import os
+
 import cv2
 
 """""
@@ -30,9 +32,10 @@ def extract_frames(video_path, save_path):
 
 
 # 替换为实际视频文件的路径
-video_path = r"D:\Users\86195\Documents\WeChat Files\wxid_jfvo1zhvfh9h12\FileStorage\Video\2024-07\6eeb4dac63b0ece460c1dab48407bc9a.mp4"
+video_path = r"../videos/long-jump.mp4"
 
 # 替换为想要保存帧图片的目录路径
-save_path = r"D:\Users\86195\Desktop\peng1_every_frame"
+save_path = r"../all_frames"
+os.makedirs(save_path, exist_ok=True)
 
 extract_frames(video_path, save_path)

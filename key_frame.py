@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('Landmarks/all_landmarks.npy')
+keypoints_data = np.load('Landmarks/all_landmarks_2.npy')
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
@@ -32,6 +32,11 @@ def calculate_angle(a, b, c):
     cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
     angle = np.arccos(cosine_angle)
     return np.degrees(angle)
+
+def calculate_k(a, b):
+    a = np.array(a)
+    b = np.array(b)
+    return (a[1] - b[1]) / (a[0] - b[0])
 
 def detect_phases(keypoints):
     num_frames = keypoints.shape[0]
@@ -68,29 +73,28 @@ def detect_phases(keypoints):
         hand_height = min(right_wrist[1], left_wrist[1])
         toe_move = min(left_toe[0], right_toe[0])
         body_angle = calculate_angle(RIGHT_SHOULDER, RIGHT_HIP, RIGHT_KNEE)
-        left_foot_angle = calculate_angle(left_knee, left_ankle, left_toe)
-        right_foot_angle = calculate_angle(right_knee, right_ankle, right_toe)
+        left_foot_angle = calculate_angle(left_knee, left_heel, left_toe)
+        right_foot_angle = calculate_angle(right_knee, right_heel, right_toe)
+        flight_angle = abs(calculate_k(right_shoulder, right_heel))
 
         print(i)
         print('heel_height: ', heel_height)
         print('angle: ', right_foot_angle)
         print('left_wrist[0]  left_shoulder[0]: ', left_wrist[0], left_shoulder[0])
+        print('hand height: ', hand_height)
+        print('k: ', flight_angle)
 
         # 起飞
-        if (left_foot_angle > 150 and right_foot_angle > 150) and take_off == -1 and last_back_swing != -1:
+        if (left_foot_angle > 120 and right_foot_angle > 120) and take_off == -1 and last_back_swing != -1:
             print('i: ', i)
             take_off = i
         # 前摆: 手向前举到峰值
-        elif (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and (hand_height < pmin_hand_height) and take_off == -1:
+        elif (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and (hand_height < pmin_hand_height) and take_off == -1 and (flight_angle > 3):
             last_pre_swing = i
         # 后摆: 手向后举到峰值
-        elif (left_wrist[0] < left_shoulder[0] and right_wrist[0] < right_shoulder[0]) and (hand_height < bmin_hand_height) and last_pre_swing != -1 and take_off == -1:
+        elif (left_wrist[0] < left_hip[0] and right_wrist[0] < right_hip[0]) and (hand_height < bmin_hand_height) and last_pre_swing != -1 and take_off == -1:
             last_back_swing = i
         # 腾空: 脚后跟离地最高点
-        # elif heel_height > max_height and take_off != -1:
-        #     print(max_height)
-        #     max_height = heel_height
-        #     flight = i
         elif heel_height < min_height and take_off != -1:
             print(min_height)
             min_height = heel_height
@@ -142,8 +146,8 @@ keyframe_indices = detect_phases(keypoints_data)
 print(f"关键帧索引: {keyframe_indices}")
 
 # 设置视频文件路径
-video_source = "videos/long-jump.mp4"
-output_dir = "Keyframes"
+video_source = "videos/2.mp4"
+output_dir = "Keyframes/2"
 os.makedirs(output_dir, exist_ok=True)
 
 # 读取视频文件

@@ -65,10 +65,10 @@ def plot_frame_with_projection(frame_index):
     plt.show()
 
 # 示例：绘制第10帧图像和2D关键点投影
+plot_frame_with_projection(157)
+plot_frame_with_projection(151)
 plot_frame_with_projection(158)
-plot_frame_with_projection(159)
 plot_frame_with_projection(160)
-plot_frame_with_projection(161)
-plot_frame_with_projection(162)
+plot_frame_with_projection(173)
 # 释放视频捕获对象
 cap.release()
