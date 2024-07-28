@@ -32,7 +32,7 @@ def extract_frames(video_path, save_path):
 
 
 # 替换为实际视频文件的路径
-video_path = r"../videos/long-jump.mp4"
+video_path = r"../videos/2.mp4"
 
 # 替换为想要保存帧图片的目录路径
 save_path = r"../all_frames"
