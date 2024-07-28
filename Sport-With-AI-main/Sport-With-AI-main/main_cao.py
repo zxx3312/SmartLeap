@@ -45,12 +45,6 @@ with mp_pose.Pose(min_detection_confidence=0.5,
     while cap.isOpened():
         try:
             ret, frame = cap.read()
-            # 设置目标高度和宽度
-            target_height = 720
-            target_width = 1280
-            # 调整图片大小
-            frame = cv2.resize(frame, (target_width, target_height))
-            height, width, _ = frame.shape
             if not ret:
                 break
 
@@ -72,14 +66,11 @@ with mp_pose.Pose(min_detection_confidence=0.5,
             except:
                 pass
 
-            if results.pose_world_landmarks:
-                a = results.pose_world_landmarks
-                print(results.pose_world_landmarks)
-                for i, landmark in enumerate(results.pose_world_landmarks.landmark):
+
+            if results.pose_landmarks:
+                for i, landmark in enumerate(results.pose_landmarks.landmark):
                     # 获取关键点坐标
                     x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
-                    if i == 0:
-                        print(landmark.x)
 
                     # 绘制关键点中文名称
                     cv2.putText(frame, keypoint_names.get(i, f'P{i}'), (x, y),

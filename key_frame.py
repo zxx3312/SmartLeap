@@ -42,9 +42,10 @@ def detect_phases(keypoints):
     flight = -1
     landing = -1
 
-    pmax_hand_height = -1000
-    bmax_hand_height = -1000
+    pmin_hand_height = 1000
+    bmin_hand_height = 1000
     max_height = -1000
+    min_height = 1000
     for i in range(num_frames):
         left_heel = keypoints[i][LEFT_HEEL][:2]
         right_heel = keypoints[i][RIGHT_HEEL][:2]
@@ -73,30 +74,35 @@ def detect_phases(keypoints):
         print(i)
         print('heel_height: ', heel_height)
         print('angle: ', right_foot_angle)
+        print('left_wrist[0]  left_shoulder[0]: ', left_wrist[0], left_shoulder[0])
 
         # 起飞
         if (left_foot_angle > 150 and right_foot_angle > 150) and take_off == -1 and last_back_swing != -1:
             print('i: ', i)
             take_off = i
         # 前摆: 手向前举到峰值
-        elif (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and (hand_height > pmax_hand_height) and take_off == -1:
+        elif (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and (hand_height < pmin_hand_height) and take_off == -1:
             last_pre_swing = i
         # 后摆: 手向后举到峰值
-        elif (left_wrist[0] < left_shoulder[0] and right_wrist[0] < right_shoulder[0]) and (hand_height > bmax_hand_height) and last_pre_swing != -1 and take_off == -1:
+        elif (left_wrist[0] < left_shoulder[0] and right_wrist[0] < right_shoulder[0]) and (hand_height < bmin_hand_height) and last_pre_swing != -1 and take_off == -1:
             last_back_swing = i
         # 腾空: 脚后跟离地最高点
-        elif heel_height > max_height and take_off != -1:
-            print(max_height)
-            max_height = heel_height
+        # elif heel_height > max_height and take_off != -1:
+        #     print(max_height)
+        #     max_height = heel_height
+        #     flight = i
+        elif heel_height < min_height and take_off != -1:
+            print(min_height)
+            min_height = heel_height
             flight = i
         # 落地: 脚后跟第一次触地
-        elif (left_wrist[1] < left_shoulder[1] and right_wrist[1] < right_shoulder[1]) and flight != -1:
+        elif (left_wrist[1] > left_shoulder[1] and right_wrist[1] > right_shoulder[1]) and flight != -1:
             print(left_wrist[1], left_shoulder[1], right_wrist[1], right_shoulder[1])
             landing = i
             break
 
-        pmax_hand_height = hand_height
-        bmax_hand_height = hand_height
+        pmin_hand_height = hand_height
+        bmin_hand_height = hand_height
 
     return last_pre_swing, last_back_swing, take_off, flight, landing
 
