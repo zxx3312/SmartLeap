@@ -1,16 +1,25 @@
 import os
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
 import cv2
 import numpy as np
 import mediapipe as mp
+from body_part_angle import BodyPartAngle
+from types_of_exercise import TypeOfExercise
+
+# 设置视频地址
+video_source = "../../视频简单预处理/Crop_Video/jump_clip_3.mp4"
+
+# 设置动作类型（输出文件的名称）
+exercise_type = "cjd_test1"
 
 # 初始化 Mediapipe 相关
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 # 读取视频文件
-cap = cv2.VideoCapture("../../视频简单预处理/Crop_Video/jump_clip_3.mp4")
+cap = cv2.VideoCapture(video_source)
+cap.set(3, 800)  # 设置宽度
+cap.set(4, 480)  # 设置高度
 
 # 关键点名称和对应索引
 keypoint_names = {
@@ -30,71 +39,68 @@ all_landmarks = []
 
 # 设置 Mediapipe Pose 模块
 with mp_pose.Pose(min_detection_confidence=0.5,
-                  min_tracking_confidence=0.5) as pose:
+                   min_tracking_confidence=0.5) as pose:
+    counter = 0  # 运动计数
+    status = True  # 运动状态
     while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+        try:
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        frame_height, frame_width, _ = frame.shape
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = pose.process(frame)
+            frame = cv2.resize(frame, (800, 480), interpolation=cv2.INTER_AREA)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame.flags.writeable = False
+            results = pose.process(frame)
+            frame.flags.writeable = True
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-        if results.pose_landmarks:
-            frame_landmarks = [(landmark.x, landmark.y, landmark.z) for landmark in results.pose_world_landmarks.landmark]
-            all_landmarks.append(frame_landmarks)
+            try:
+                landmarks = results.pose_world_landmarks.landmark
+                # 存储当前帧的关键点数据
+                frame_landmarks = [(landmark.x, landmark.y, landmark.z) for landmark in landmarks]
+                all_landmarks.append(frame_landmarks)
 
-            frame_landmarks = np.array(frame_landmarks)
-            x = frame_landmarks[:, 0]
-            y = frame_landmarks[:, 1]
-            z = frame_landmarks[:, 2]
+                counter, status = TypeOfExercise(landmarks).calculate_exercise(
+                    exercise_type, counter, status)
+            except:
+                pass
 
-            # 创建 3D 图形
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
 
-            # 绘制关键点
-            ax.scatter(x, y, z, c='r', marker='o')
+            if results.pose_landmarks:
+                for i, landmark in enumerate(results.pose_landmarks.landmark):
+                    # 获取关键点坐标
+                    x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
 
-            # 绘制每个关键点的名称（可选）
-            for i in range(len(x)):
-                ax.text(x[i], y[i], z[i], keypoint_names.get(i, f'P{i}'), size=10, zorder=1)
+                    # 绘制关键点中文名称
+                    cv2.putText(frame, keypoint_names.get(i, f'P{i}'), (x, y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-            # 设置坐标轴标签
-            ax.set_xlabel('X Label')
-            ax.set_ylabel('Y Label')
-            ax.set_zlabel('Z Label')
+                # 渲染关键点
+                mp_drawing.draw_landmarks(
+                    frame,
+                    results.pose_landmarks,
+                    mp_pose.POSE_CONNECTIONS,
+                    mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2, circle_radius=2),
+                    mp_drawing.DrawingSpec(color=(174, 139, 45), thickness=2, circle_radius=2),
+                )
 
-            # 设置图形标题
-            plt.title(f'3D Keypoints Visualization (Frame {frame})')
-
-            # 设置视角
-            ax.view_init(elev=45, azim=-45)  # elev 设为 90，将 z 轴放在底部
-
-            # 显示图形
-            plt.show()
-
-            # 绘制关键点
-            for i, landmark in enumerate(results.pose_landmarks.landmark):
-                x = int(landmark.x * frame_width)
-                y = int(landmark.y * frame_height)
-                cv2.putText(frame, keypoint_names.get(i, f'P{i}'), (x, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
-
-            mp_drawing.draw_landmarks(
-                frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2, circle_radius=2),
-                mp_drawing.DrawingSpec(color=(174, 139, 45), thickness=2, circle_radius=2))
-
-        cv2.imshow('Video', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-        if cv2.waitKey(10) & 0xFF == ord('q'):
+            cv2.imshow('Video', frame)
+            if cv2.waitKey(10) & 0xFF == ord('q'):
+                print("counter: " + str(counter))
+                break
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            print("err counter: " + str(counter))
             break
 
     cap.release()
     cv2.destroyAllWindows()
 
-# 转换为Numpy数组并保存
+# 转换为Numpy数组
 all_landmarks_np = np.array(all_landmarks)
+print(all_landmarks_np)
+
 # 设置保存路径
 output_dir = "../../Landmarks/body/Crop_Landmarks"
 output_path = os.path.join(output_dir, "all_landmarks_3.npy")

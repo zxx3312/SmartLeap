@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-world_data = np.load('Landmarks/world/Crop_Landmarks/all_landmarks_3.npy')
-body_data = np.load('Landmarks/body/Crop_Landmarks/all_landmarks_3.npy')
+world_data = np.load('Landmarks/world/Crop_Landmarks/all_landmarks_3.npy', allow_pickle=True)
+body_data = np.load('Landmarks/body/Crop_Landmarks/all_landmarks_3.npy', allow_pickle=True)
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
@@ -39,13 +39,12 @@ def calculate_k(a, b):
     b = np.array(b)
     return (a[1] - b[1]) / (a[0] - b[0])
 
-def detect_phases(body_points, flight):
+def detect_phases(body_points):
     num_frames_body = body_points.shape[0]
 
     last_pre_swing = -1
     last_back_swing = -1
     take_off = -1
-    landing = -1
 
     pmin_hand_height = 1000
     bmin_hand_height = 1000
@@ -83,30 +82,27 @@ def detect_phases(body_points, flight):
         print('left_heel[1] right_heel[1]: ', left_heel[1], right_heel[1])
         print('hand height: ', hand_height)
         print('k: ', flight_angle)
+        print('body angle: ', body_angle)
         print('hip angle: ', hip_angle)
 
         # 起飞
-        if take_off == -1 and last_back_swing != -1 and flight_angle < 2:
+        if last_back_swing != -1 and flight_angle < 4 and body_angle < 4:
             print('i: ', i)
             take_off = i
+            break
         # 前摆: 手向前举到峰值
-        elif (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and (hand_height < pmin_hand_height) and take_off == -1 and (flight_angle > 3 and body_angle > 3):
+        elif (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and (hand_height < pmin_hand_height) and take_off == -1 and (last_back_swing == -1 or i < last_back_swing) and (flight_angle > 3 and body_angle > 3):
             last_pre_swing = i
         # 后摆: 手向后举到峰值
-        elif (left_wrist[0] < left_hip[0] and right_wrist[0] < right_hip[0]) and (hand_height < bmin_hand_height) and last_pre_swing != -1 and take_off == -1 and hip_angle < 170:
+        elif (left_wrist[0] < left_shoulder[0] and right_wrist[0] < right_shoulder[0] and left_wrist[1] < left_hip[1] and right_wrist[1] < right_hip[1]) and (hand_height < bmin_hand_height) and last_pre_swing != -1 and take_off == -1 and hip_angle < 170:
             last_back_swing = i
-        # 落地: 脚后跟第一次触地
-        elif (left_wrist[1] > left_shoulder[1] and right_wrist[1] > right_shoulder[1]) and (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and take_off != -1 and i > flight:
-            print(left_wrist[1], left_shoulder[1], right_wrist[1], right_shoulder[1])
-            landing = i
-            break
 
         pmin_hand_height = hand_height
         bmin_hand_height = hand_height
 
-    return last_pre_swing, last_back_swing, take_off, landing
+    return last_pre_swing, last_back_swing, take_off
 
-def detect_flight(world_points):
+def detect_flight(world_points, take_off):
     num_frames_world = world_points.shape[0]
 
     flight = -1
@@ -115,21 +111,28 @@ def detect_flight(world_points):
     max_height = -1000
     min_height = 1000
     for i in range(num_frames_world):
-        absolute_left_hip = world_points[i][LEFT_HIP][:2]
-        absolute_right_hip = world_points[i][RIGHT_HIP][:2]
+        left_shoulder = world_points[i][LEFT_SHOULDER][:2]
+        right_shoulder = world_points[i][RIGHT_SHOULDER][:2]
+        left_wrist = world_points[i][LEFT_WRIST][:2]
+        right_wrist = world_points[i][RIGHT_WRIST][:2]
+        left_hip = world_points[i][LEFT_HIP][:2]
+        right_hip = world_points[i][RIGHT_HIP][:2]
 
-        heel_height = min(absolute_left_hip[1], absolute_right_hip[1])
+        heel_height = min(left_hip[1], right_hip[1])
 
         print(i)
         print('heel_height: ', heel_height)
 
         # 腾空: 脚后跟离地最高点
-        if heel_height < min_height:
+        if heel_height < min_height and i > take_off:
             print(heel_height)
             min_height = heel_height
             flight = i
+        elif (left_wrist[1] > left_shoulder[1] and right_wrist[1] > right_shoulder[1]) and (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and flight != -1:
+            landing = i
+            break
 
-    return flight
+    return flight, landing
 
 # def get_keyframe_indices(phases):
 #     last_pre_swing = None
@@ -161,16 +164,16 @@ def detect_flight(world_points):
 # # 获取关键帧索引
 # keyframe_indices = get_keyframe_indices(phases)
 
+last_pre_swing, last_back_swing, take_off = detect_phases(body_data)
+flight, landing = detect_flight(world_data, take_off)
 
-flight = detect_flight(world_data)
-last_pre_swing, last_back_swing, take_off, landing = detect_phases(body_data, flight)
 
 # 输出关键帧索引
 print(f"关键帧索引: {last_pre_swing, last_back_swing, take_off, flight, landing}")
 
 # 设置视频文件路径
 video_source = "视频简单预处理/Crop_Video/jump_clip_3.mp4"
-output_dir = "Keyframes/1"
+output_dir = "Keyframes/3"
 os.makedirs(output_dir, exist_ok=True)
 
 # 读取视频文件

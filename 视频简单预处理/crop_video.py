@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('../Landmarks/body/origin/all_landmarks_2.npy')
+keypoints_data = np.load('../Landmarks/body/origin/all_landmarks_3.npy')
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
@@ -72,8 +72,8 @@ take_off_frame = detect_phases(keypoints_data)
 print(f"起跳帧索引: {take_off_frame}")
 
 # 设置视频文件路径
-video_source = "../videos/2.mp4"
-output_video = "Crop_Video/body/jump_clip_2.mp4"
+video_source = "../videos/3.mp4"
+output_video = "Crop_Video/jump_clip_3.mp4"
 os.makedirs(os.path.dirname(output_video), exist_ok=True)
 
 # 读取视频文件
