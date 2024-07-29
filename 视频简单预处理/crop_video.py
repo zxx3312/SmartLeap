@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('../Landmarks/world/origin/all_landmarks_3.npy')
+keypoints_data = np.load('../Landmarks/body/origin/all_landmarks_2.npy')
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
@@ -57,9 +57,11 @@ def detect_phases(keypoints):
         left_foot_angle = calculate_angle(left_knee, left_heel, left_toe)
         right_foot_angle = calculate_angle(right_knee, right_heel, right_toe)
         flight_angle = abs(calculate_k(right_shoulder, right_heel))
+        print(i)
+        print('left_foot_angle,right_foot_angle: ', left_foot_angle, right_foot_angle, flight_angle)
 
         # 起飞
-        if (left_foot_angle > 120 and right_foot_angle > 120) and flight_angle < 10:
+        if flight_angle < 2:
             take_off = i
             break
 
@@ -70,8 +72,8 @@ take_off_frame = detect_phases(keypoints_data)
 print(f"起跳帧索引: {take_off_frame}")
 
 # 设置视频文件路径
-video_source = "../videos/3.mp4"
-output_video = "Crop_Video/jump_clip_3.mp4"
+video_source = "../videos/2.mp4"
+output_video = "Crop_Video/body/jump_clip_2.mp4"
 os.makedirs(os.path.dirname(output_video), exist_ok=True)
 
 # 读取视频文件
@@ -84,7 +86,7 @@ duration = frame_count / fps
 print(f"视频帧率: {fps}, 总帧数: {frame_count}, 时长: {duration} 秒")
 
 # 计算裁剪的开始帧和结束帧
-start_frame = max(take_off_frame - int(2 * fps), 0)
+start_frame = max(take_off_frame - int(2.2 * fps), 0)
 end_frame = min(frame_count, take_off_frame + int(3 * fps))
 print(f"裁剪开始帧: {start_frame}, 结束帧: {end_frame}")
 

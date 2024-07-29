@@ -34,10 +34,10 @@ def apply_gaussian_blur(video_path, output_path, kernel_size=(15, 15)):
     cv2.destroyAllWindows()
 
 # 输入视频的路径
-input_video_path = r"Crop_Video/jump_clip_2.mp4"
+input_video_path = r"Crop_Video/world/jump_clip_2.mp4"
 
 # 输出视频的保存路径
-output_video_path = r"Blurred_Video/blurred_video_2.mp4"
+output_video_path = r"Blurred_Video/world/blurred_video_2.mp4"
 os.makedirs(os.path.dirname(output_video_path), exist_ok=True)
 
 # 应用高斯模糊并保存视频
