@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('Landmarks/all_landmarks.npy')
+keypoints_data = np.load('Crop_Landmarks/all_landmarks_3.npy')
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
@@ -146,8 +146,8 @@ keyframe_indices = detect_phases(keypoints_data)
 print(f"关键帧索引: {keyframe_indices}")
 
 # 设置视频文件路径
-video_source = "videos/1.mp4"
-output_dir = "Keyframes/1"
+video_source = "视频简单预处理/Crop_Video/jump_clip_3.mp4"
+output_dir = "Keyframes/3"
 os.makedirs(output_dir, exist_ok=True)
 
 # 读取视频文件

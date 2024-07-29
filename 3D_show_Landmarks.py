@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-keypoints_data = np.load('all_landmarks.npy')
+keypoints_data = np.load('Landmarks/all_landmarks_1.npy')
 A = [11, 12, 15, 16, 23, 24, 25, 26, 27, 28]
 txt = ['11', '12', '23', '24', '25', '26', '27', '28']
 # 2. 选择第一组数据
