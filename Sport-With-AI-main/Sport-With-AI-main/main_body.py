@@ -7,7 +7,7 @@ from body_part_angle import BodyPartAngle
 from types_of_exercise import TypeOfExercise
 
 # 设置视频地址
-video_source = "../../视频简单预处理/Crop_Video/jump_clip_3.mp4"
+video_source = "../../videos/1.mp4"
 
 # 设置动作类型（输出文件的名称）
 exercise_type = "cjd_test1"
@@ -56,7 +56,7 @@ with mp_pose.Pose(min_detection_confidence=0.5,
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
             try:
-                landmarks = results.pose_landmarks.landmark
+                landmarks = results.pose_world_landmarks.landmark
                 # 存储当前帧的关键点数据
                 frame_landmarks = [(landmark.x, landmark.y, landmark.z) for landmark in landmarks]
                 all_landmarks.append(frame_landmarks)
@@ -67,8 +67,8 @@ with mp_pose.Pose(min_detection_confidence=0.5,
                 pass
 
 
-            if results.pose_landmarks:
-                for i, landmark in enumerate(results.pose_landmarks.landmark):
+            if results.pose_world_landmarks:
+                for i, landmark in enumerate(results.pose_world_landmarks.landmark):
                     # 获取关键点坐标
                     x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
 
@@ -79,7 +79,7 @@ with mp_pose.Pose(min_detection_confidence=0.5,
                 # 渲染关键点
                 mp_drawing.draw_landmarks(
                     frame,
-                    results.pose_landmarks,
+                    results.pose_world_landmarks,
                     mp_pose.POSE_CONNECTIONS,
                     mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2, circle_radius=2),
                     mp_drawing.DrawingSpec(color=(174, 139, 45), thickness=2, circle_radius=2),
@@ -102,7 +102,7 @@ all_landmarks_np = np.array(all_landmarks)
 print(all_landmarks_np)
 
 # 设置保存路径
-output_dir = "../../Crop_Landmarks"
+output_dir = "../../Landmarks/body/Landmarks"
 output_path = os.path.join(output_dir, "all_landmarks_3.npy")
 
 # 确保目标文件夹存在

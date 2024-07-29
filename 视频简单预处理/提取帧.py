@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('../Crop_Landmarks/all_landmarks_3.npy')
+keypoints_data = np.load('../Landmarks/world/Crop_Landmarks/all_landmarks_3.npy')
 
 
 def extract_frames_with_keypoints(video_path, save_path, keypoints_data):

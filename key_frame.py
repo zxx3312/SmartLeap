@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('Crop_Landmarks/all_landmarks_3.npy')
+keypoints_data = np.load('Landmarks/world/Crop_Landmarks/all_landmarks_3.npy')
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11

@@ -3,7 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 
 # 加载保存的关键点数据
-keypoints_data = np.load('Landmarks/all_landmarks_1.npy')
+keypoints_data = np.load('Landmarks/world/origin/all_landmarks_1.npy')
 
 # 设置关键点名称和对应索引
 keypoint_names = {
