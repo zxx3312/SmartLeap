@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-world_data = np.load('Landmarks/world/Crop_Landmarks/all_landmarks_3.npy', allow_pickle=True)
-body_data = np.load('Landmarks/body/Crop_Landmarks/all_landmarks_3.npy', allow_pickle=True)
+world_data = np.load('Landmarks/world/Crop_Landmarks/all_landmarks_standard_1.npy', allow_pickle=True)
+body_data = np.load('Landmarks/body/Crop_Landmarks/all_landmarks_standard_1.npy', allow_pickle=True)
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
@@ -86,7 +86,7 @@ def detect_phases(body_points):
         print('hip angle: ', hip_angle)
 
         # 起飞
-        if last_back_swing != -1 and flight_angle < 4 and body_angle < 4:
+        if last_back_swing != -1 and flight_angle < 4 and body_angle < 4 and (left_wrist[1] < left_shoulder[1] and right_wrist[1] < right_shoulder[1]):
             print('i: ', i)
             take_off = i
             break
@@ -128,9 +128,10 @@ def detect_flight(world_points, take_off):
             print(heel_height)
             min_height = heel_height
             flight = i
-        elif (left_wrist[1] > left_shoulder[1] and right_wrist[1] > right_shoulder[1]) and (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and flight != -1:
+        elif (left_wrist[1] > left_shoulder[1] and right_wrist[1] > right_shoulder[1]) and (left_wrist[0] > left_shoulder[0] and right_wrist[0] > right_shoulder[0]) and flight != -1 and heel_height > max_height:
             landing = i
-            break
+            max_height = heel_height
+
 
     return flight, landing
 
@@ -172,8 +173,8 @@ flight, landing = detect_flight(world_data, take_off)
 print(f"关键帧索引: {last_pre_swing, last_back_swing, take_off, flight, landing}")
 
 # 设置视频文件路径
-video_source = "视频简单预处理/Crop_Video/jump_clip_3.mp4"
-output_dir = "Keyframes/3"
+video_source = "视频简单预处理/Crop_Video/standard_1.mp4"
+output_dir = "Keyframes/standard_1"
 os.makedirs(output_dir, exist_ok=True)
 
 # 读取视频文件

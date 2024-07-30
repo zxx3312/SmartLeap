@@ -77,8 +77,9 @@ with mp_pose.Pose(min_detection_confidence=0.5,
             )
 
             cv2.imshow('Video', frame)
+            print("1111")
             if cv2.waitKey(10) & 0xFF == ord('q'):
-                print("counter: " + str(counter))
+                #print("counter: " + str(counter))
                 break
         except:
             print("err counter: " + str(counter))

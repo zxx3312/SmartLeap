@@ -7,7 +7,7 @@ from body_part_angle import BodyPartAngle
 from types_of_exercise import TypeOfExercise
 
 # 设置视频地址
-video_source = "../../视频简单预处理/Crop_Video/jump_clip_3.mp4"
+video_source = "../../视频简单预处理/Crop_Video/standard_1.mp4"
 
 # 设置动作类型（输出文件的名称）
 exercise_type = "cjd_test1"
@@ -103,7 +103,7 @@ print(all_landmarks_np)
 
 # 设置保存路径
 output_dir = "../../Landmarks/world/Crop_Landmarks"
-output_path = os.path.join(output_dir, "all_landmarks_3.npy")
+output_path = os.path.join(output_dir, "all_landmarks_standard_1.npy")
 
 # 确保目标文件夹存在
 os.makedirs(output_dir, exist_ok=True)

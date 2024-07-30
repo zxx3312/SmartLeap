@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('../Landmarks/body/origin/all_landmarks_3.npy')
+keypoints_data = np.load('../Landmarks/body/origin/all_landmarks_1.npy')
 
 # 定义关键点的索引
 LEFT_SHOULDER = 11
@@ -72,8 +72,8 @@ take_off_frame = detect_phases(keypoints_data)
 print(f"起跳帧索引: {take_off_frame}")
 
 # 设置视频文件路径
-video_source = "../videos/3.mp4"
-output_video = "Crop_Video/jump_clip_3.mp4"
+video_source = "../videos/1.mp4"
+output_video = "Crop_Video/1.mp4"
 os.makedirs(os.path.dirname(output_video), exist_ok=True)
 
 # 读取视频文件
@@ -87,7 +87,8 @@ print(f"视频帧率: {fps}, 总帧数: {frame_count}, 时长: {duration} 秒")
 
 # 计算裁剪的开始帧和结束帧
 start_frame = max(take_off_frame - int(2.2 * fps), 0)
-end_frame = min(frame_count, take_off_frame + int(3 * fps))
+# end_frame = min(frame_count, take_off_frame + int(3 * fps))
+end_frame = frame_count
 print(f"裁剪开始帧: {start_frame}, 结束帧: {end_frame}")
 
 # 设置输出视频编解码器和帧率

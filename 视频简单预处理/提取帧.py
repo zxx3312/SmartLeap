@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # 加载保存的关键点数据
-keypoints_data = np.load('../Landmarks/world/Crop_Landmarks/all_landmarks_2.npy')
+keypoints_data = np.load('../Landmarks/world/Crop_Landmarks/all_landmarks_standard_1.npy')
 
 
 def extract_frames_with_keypoints(video_path, save_path, keypoints_data):
@@ -36,7 +36,7 @@ def extract_frames_with_keypoints(video_path, save_path, keypoints_data):
 
 
 # 替换为实际视频文件的路径
-video_path = r"Crop_Video/jump_clip_2.mp4"
+video_path = r"Crop_Video/standard_1.mp4"
 
 # 替换为想要保存帧图片的目录路径
 save_path = r"../all_frames_with_keypoints"
